@@ -12,7 +12,7 @@ private:
   vec a; // size is N 
   vec b; // size is M
   matr C; // size is [N, M]
-
+  
 public:
   // constructor from Common Form
   TransportTask(
@@ -23,6 +23,42 @@ public:
   {
     C = c;
   }
+
+
+  // for first solution
+  matr NorthWestMethod(vec A, vec B)
+  {
+    matr X(A.size(), B.size());
+    int nw_cell_x = 0;
+    int nw_cell_y = 0;
+    while (nw_cell_x < A.size() && nw_cell_y < B.size())
+    {
+      double col_amount = B[nw_cell_x];
+      double row_amount = A[nw_cell_y];
+
+      for (int i = 0; i < nw_cell_x; i++)
+        row_amount -= X[nw_cell_y][i];
+
+      for (int i = 0; i < nw_cell_y; i++)
+        col_amount -= X[i][nw_cell_x];
+
+      if (col_amount < row_amount)
+      {
+        X[nw_cell_y][nw_cell_x] = col_amount;
+        nw_cell_x++;
+      }
+      else
+      {
+        X[nw_cell_y][nw_cell_x] = row_amount;
+        nw_cell_y++;
+      }
+    }
+    if (nw_cell_y < B.size() - 1 || nw_cell_x < A.size() - 1)
+      printf("Vovas made a huge mistake");
+    return X;
+  }
+
+
   #if 0 // I think you may need it
   vec extremePointMethod(void) {
   
