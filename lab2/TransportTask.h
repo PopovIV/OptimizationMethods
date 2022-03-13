@@ -49,7 +49,7 @@ private:
       for (int i = k + 1; i < N; i++)
         if (fabs(A[i][k]) > v_max)
           v_max = A[i][k], i_max = i;
-      if(i_max != k)
+      if (i_max != k)
         for (int t = 0; t <= N; t++) {
           double tmp = A[k][t];
           A[k][t] = A[i_max][t];
@@ -57,7 +57,7 @@ private:
         }
       for (int i = k + 1; i < N; i++) {
         double f = A[i][k] / A[k][k];
-        for(int j = k + 1; j <= N; j++)
+        for (int j = k + 1; j <= N; j++)
           A[i][j] -= A[k][j] * f;
         A[i][k] = 0;
       }
@@ -88,14 +88,16 @@ public:
     NorthWestMethod(a, b);
   }
 
- // for first solution
-  matr NorthWestMethod(vec A, vec B)
+  // for first solution
+  std::pair<matr, std::vector<std::pair<int, int>>> NorthWestMethod(vec A, vec B)
   {
     matr X(A.size(), B.size());
     int nw_cell_x = 0;
     int nw_cell_y = 0;
+    std::vector<std::pair<int, int>> basis;
     while (nw_cell_y < A.size() && nw_cell_x < B.size())
     {
+      basis.push_back(std::make_pair(nw_cell_y, nw_cell_x));
       double col_amount = B[nw_cell_x];
       double row_amount = A[nw_cell_y];
 
@@ -118,7 +120,7 @@ public:
     }
     if (nw_cell_y < A.size() - 1 || nw_cell_x < B.size() - 1)
       printf("Vovas made a huge mistake");
-    return X;
+    return std::make_pair(X, basis);
   }
 
   std::pair<vec, vec> BuildPotentials(std::vector<std::pair<int, int>> basis)
@@ -137,6 +139,9 @@ public:
     while (!is_done)
     {
       is_done = true;
+      bool is_changed = false;
+      int remember_x = -1;
+
       // 3.1) let some value became 0
       for (int i = 0; i < basis.size(); i++)
       {
@@ -164,17 +169,29 @@ public:
         {
           U[cell_y] = C[cell_y][cell_x] - V[cell_x];
           filled_U.push_back(cell_y);
+          is_changed = true;
         }
         else if (!is_x && is_y)
         {
           V[cell_x] = C[cell_y][cell_x] - U[cell_y];
           filled_V.push_back(cell_x);
+          is_changed = true;
+        }
+        else if (!is_x && !is_y)
+        {
+          remember_x = cell_x;
         }
 
         if (!(is_x && is_y))
         {
           is_done = false;
         }
+      }
+      // if we iterate and something do not changed
+      if (is_changed == false && is_done == false)
+      {
+        V[remember_x] = 0;
+        filled_V.push_back(remember_x);
       }
     }
     return std::make_pair(U, V);
@@ -256,24 +273,25 @@ public:
   matr PotentialMethod(void) {
 
     // 1) Find first solution
-    matr X = NorthWestMethod(a, b);
+    auto Xb = NorthWestMethod(a, b);
+
+    matr X = Xb.first;
 
     // 2) find basis
-    std::vector<std::pair<int, int>> basis;
+    std::vector<std::pair<int, int>> basis = Xb.second;
     std::vector<std::vector<int>> basis_y_for_x;
     std::vector<std::vector<int>> basis_x_for_y;
 
     basis_y_for_x.resize(b.size());
     basis_x_for_y.resize(a.size());
 
-    for (int i = 0; i < X.sizeH(); i++)
-      for (int j = 0; j < X.sizeW(); j++)
-        if (X[i][j] != 0)
-        {
-          basis.push_back(std::make_pair(i, j));
-          basis_x_for_y[i].push_back(j);
-          basis_y_for_x[j].push_back(i);
-        }
+    for (int k = 0; k < basis.size(); k++)
+    {
+      int i = basis[k].first;
+      int j = basis[k].second;
+      basis_x_for_y[i].push_back(j);
+      basis_y_for_x[j].push_back(i);
+    }
 
     // 4) cycle of DEATH begins
     while (true)
@@ -305,8 +323,8 @@ public:
       std::vector<std::pair<int, int>> cycle;
       int res = FindCycle(basis_y_for_x, basis_x_for_y, std::make_pair(cur_min_y, cur_min_x), cycle);
 
-      if (res == 0)
-        printf("Cannot find cycle");
+      if (res < 3)
+        throw std::exception("Cannot find cycle");
 
       std::pair<int, int> min_cell = cycle[1];
       // 6) find in cycle minimum on odd (because we start with 0) position
@@ -346,8 +364,8 @@ public:
     }
 
     double sum = 0;
-    for(int i = 0; i < C.sizeH(); i++)
-      for(int j = 0; j < C.sizeW(); j++)
+    for (int i = 0; i < C.sizeH(); i++)
+      for (int j = 0; j < C.sizeW(); j++)
         sum += X[i][j] * C[i][j];
     std::cout << "Total sum: " << sum << std::endl;
 
@@ -365,7 +383,7 @@ public:
     matr A(f.size(), C.sizeH() * C.sizeW());
     vec z(0);
     for (int i = 0, A_j = 0; i < C.sizeH(); i++, A_j += C.sizeW())
-      for (int j = 0; j < C.sizeW(); j++){
+      for (int j = 0; j < C.sizeW(); j++) {
         z.append(C[i][j]);
         A[i][j + A_j] = 1;
         A[C.sizeH() + j][j + A_j] = 1;
@@ -376,13 +394,13 @@ public:
     //method itself
     std::vector<int> setOfIndexies(A.sizeW());
     for (int i = 0; i < setOfIndexies.size(); i++)
-        setOfIndexies[i] = i;
+      setOfIndexies[i] = i;
     vec solution(0);
     double minOfFunction = std::numeric_limits<double>::max();
     std::vector<std::vector<int>> vectorOfIndexies = combine(A.sizeW(), A.sizeH());
-    for(auto& indexies : vectorOfIndexies){//checks every possible combination of columns
+    for (auto& indexies : vectorOfIndexies) {//checks every possible combination of columns
       //get matrix for linear system
-      matr subMatr(0,0);
+      matr subMatr(0, 0);
       try {
         subMatr = A.getSubMatrix(indexies);
       }
@@ -435,8 +453,8 @@ public:
     std::cout << "Total sum: " << solution * z << std::endl;
 
     matr sol(C.sizeH(), C.sizeW());
-    for(int i = 0, k = 0; i < C.sizeH(); i++)
-      for(int j = 0; j < C.sizeW(); j++)
+    for (int i = 0, k = 0; i < C.sizeH(); i++)
+      for (int j = 0; j < C.sizeW(); j++)
         sol[i][j] = solution[k++];
     return sol;
 
