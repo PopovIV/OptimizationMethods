@@ -54,6 +54,11 @@ public:
     A.insert(A.end(), q.A.begin(), q.A.end());
   }
 
+  void pop()
+  {
+    A.pop_back();
+  }
+
   //for debug
   void print(void) {
     for (auto f : A)
@@ -225,6 +230,9 @@ public:
 
   }
 
+  void deleteLastRow(void) {
+    A.pop_back();
+  }
 
   //for debug
   void print(void) {

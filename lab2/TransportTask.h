@@ -4,7 +4,7 @@
 #include "math.h"
 #include <limits>
 #include <algorithm>
-#include <unordered_map>
+
 
 class TransportTask {
 private:
@@ -13,6 +13,67 @@ private:
   vec a; // size is N 
   vec b; // size is M
   matr C; // size is [N, M]
+
+  //utility functions for extreme point method
+  void genCombinations(int n, int k, int i, int nc, std::vector<int>& temp, std::vector<std::vector<int>>& ret) {
+    if (i == n) {
+      if (nc == k)
+        ret.emplace_back(temp);
+      return;
+    }
+    if (nc < k)
+      temp[nc] = i;
+    genCombinations(n, k, i + 1, nc + 1, temp, ret);
+    genCombinations(n, k, i + 1, nc, temp, ret);
+  }
+  std::vector<std::vector<int>> combine(int n, int k) {
+    std::vector<int> temp(k, 0);
+    std::vector<std::vector<int>> ret;
+    genCombinations(n, k, 0, 0, temp, ret);
+    return ret;
+  }
+  //function to solve linear system of eq...
+  vec Gauss(matr A, vec B) {
+
+    //vec B to matrix
+    matr b(B.size(), 1);
+    for (int i = 0; i < B.size(); i++)
+      b[i][0] = B[i];
+    A.concatinateRight(b);
+    int N = A.sizeH();
+    // Triangularization
+    for (int k = 0; k < N; k++) {
+      int i_max = k;
+      int v_max = fabs(A[i_max][k]);
+
+      for (int i = k + 1; i < N; i++)
+        if (fabs(A[i][k]) > v_max)
+          v_max = A[i][k], i_max = i;
+      if(i_max != k)
+        for (int t = 0; t <= N; t++) {
+          double tmp = A[k][t];
+          A[k][t] = A[i_max][t];
+          A[i_max][t] = tmp;
+        }
+      for (int i = k + 1; i < N; i++) {
+        double f = A[i][k] / A[k][k];
+        for(int j = k + 1; j <= N; j++)
+          A[i][j] -= A[k][j] * f;
+        A[i][k] = 0;
+      }
+    }
+    // Resolution
+    vec x(N);
+    for (int i = N - 1; i >= 0; i--) {
+      x[i] = A[i][N];
+      for (int j = i + 1; j < N; j++)
+        x[i] -= A[i][j] * x[j];
+      x[i] = x[i] / A[i][i];
+    }
+
+    return x;
+
+  }
 
 public:
   // constructor from Common Form
@@ -27,7 +88,7 @@ public:
     NorthWestMethod(a, b);
   }
 
-  // for first solution
+ // for first solution
   matr NorthWestMethod(vec A, vec B)
   {
     matr X(A.size(), B.size());
@@ -283,26 +344,45 @@ public:
       basis_x_for_y[cur_min_y].push_back(cur_min_x);
       basis_y_for_x[cur_min_x].push_back(cur_min_y);
     }
+
+    double sum = 0;
+    for(int i = 0; i < C.sizeH(); i++)
+      for(int j = 0; j < C.sizeW(); j++)
+        sum += X[i][j] * C[i][j];
+    std::cout << "Total sum: " << sum << std::endl;
+
     return X;
   }
 
+  //Extreme point method
+  matr extremePointMethod(void) {
 
+    //fistly transform transport task to linear program task
+    //free column
+    vec f(a);
+    f.concatinate(b);
+    //matrix and vector function to minize
+    matr A(f.size(), C.sizeH() * C.sizeW());
+    vec z(0);
+    for (int i = 0, A_j = 0; i < C.sizeH(); i++, A_j += C.sizeW())
+      for (int j = 0; j < C.sizeW(); j++){
+        z.append(C[i][j]);
+        A[i][j + A_j] = 1;
+        A[C.sizeH() + j][j + A_j] = 1;
+      }
+    A.deleteLastRow();
+    f.pop();
 
-#if 0 // I think you may need it
-  vec extremePointMethod(void) {
-
-    if (M > N)
-      throw std::exception("ERROR: incorrect size of task(M > N) in extreme point method");
-
+    //method itself
     std::vector<int> setOfIndexies(A.sizeW());
     for (int i = 0; i < setOfIndexies.size(); i++)
-      setOfIndexies[i] = i;
+        setOfIndexies[i] = i;
     vec solution(0);
     double minOfFunction = std::numeric_limits<double>::max();
-    std::vector<std::vector<int>> vectorOfIndexies = combine(N, M);
-    for (auto& indexies : vectorOfIndexies) {//checks every possible combination of columns
+    std::vector<std::vector<int>> vectorOfIndexies = combine(A.sizeW(), A.sizeH());
+    for(auto& indexies : vectorOfIndexies){//checks every possible combination of columns
       //get matrix for linear system
-      matr subMatr(0, 0);
+      matr subMatr(0,0);
       try {
         subMatr = A.getSubMatrix(indexies);
       }
@@ -310,34 +390,39 @@ public:
         throw ex;
       }
       //check det
-      try {
-        if (subMatr.determinant() == 0)
-          continue;
-      }
-      catch (std::exception& ex) {
-        throw ex;
-      }
+      //try {
+      //  if (subMatr.determinant() == 0)
+      //    continue;
+      //}
+      //catch (std::exception& ex) {
+      //  throw ex;
+      //}
       //solve linear system
-      vec systemSolution = rotationMethod(subMatr, b);
+
+      vec systemSolution = Gauss(subMatr, f);
 
       //check that solution is >= 0
       bool flag = true;
       for (int i = 0; i < systemSolution.size(); i++)
-        if (systemSolution[i] < 0) {
+        if (systemSolution[i] < 0 || std::isnan(systemSolution[i])) {
+          if (fabs(systemSolution[i]) == 0) {
+            systemSolution[i] = 0;
+            break;
+          }
           flag = false;
           break;
         }//bad practice, ask Vova how to do better
       if (!flag)
         continue;
       //add zeros to solution 
-      vec newSolution(c.size());
+      vec newSolution(z.size());
       for (int i = 0; i < indexies.size(); i++)
         newSolution[indexies[i]] = systemSolution[i];
 
       //check if that vector is maybe better solution
       double functionVal = 0;
       for (int i = 0; i < newSolution.size(); i++)
-        functionVal += newSolution[i] * c[i];
+        functionVal += newSolution[i] * z[i];
       if (functionVal < minOfFunction) {
         minOfFunction = functionVal;
         solution = newSolution;
@@ -346,29 +431,17 @@ public:
 
     if (solution.size() == 0)
       throw std::exception("No solutions found in extreme point");
-    return solution;
+
+    std::cout << "Total sum: " << solution * z << std::endl;
+
+    matr sol(C.sizeH(), C.sizeW());
+    for(int i = 0, k = 0; i < C.sizeH(); i++)
+      for(int j = 0; j < C.sizeW(); j++)
+        sol[i][j] = solution[k++];
+    return sol;
 
   }
-#endif
 
-  //function to get correct answer
-#if 0
-  vec retrieveCorrectAnswer(vec answer) {
-    vec c_true(cOriginalSize);
-
-    //Fill indexies that we didn't change
-    int i = 0;
-    for (i = 0; i < (cOriginalSize - numOfUnsigned); i++)
-      c_true[i] = answer[i];
-
-    //Fill indexies that we did change
-    for (int j = answer.size() - numOfUnsigned; j < answer.size(); j++, i++)
-      c_true[i] = answer[i] - answer[j];
-
-    //return
-    return c_true;
-  }
-#endif
 };
 
 #endif
