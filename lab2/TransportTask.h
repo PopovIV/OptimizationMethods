@@ -75,6 +75,74 @@ private:
 
   }
 
+  // utility function to draw cycle
+  void drawCycle(std::vector<std::pair<int, int>> cycle, matr plan) {
+
+    std::vector<std::vector<std::pair<double, std::string>>> table;
+    table.resize(C.sizeH());
+    for (auto& row : table)
+      row.resize(C.sizeW());
+    std::string plusSign = "[+]";
+    std::string minusSign = "[-]";
+    std::string empty = " - ";
+    //fill table
+    table[cycle[0].first][cycle[0].second].first = -1;
+    table[cycle[0].first][cycle[0].second].second = plusSign;
+    for (int i = 1; i < cycle.size(); i++) {
+        table[cycle[i].first][cycle[i].second].first = plan[cycle[i].first][cycle[i].second];
+        if(i % 2 == 0)
+          table[cycle[i].first][cycle[i].second].second = plusSign;
+        else
+          table[cycle[i].first][cycle[i].second].second = minusSign;
+    }
+    //print table
+    for (int i = 0; i < C.sizeH(); i++) {
+      for (int j = 0; j < C.sizeW(); j++) {
+        if (table[i][j].second == "")
+          std::cout << empty << " ";
+        else if(table[i][j].first >= 0)
+          std::cout << table[i][j].first << table[i][j].second << " ";
+        else
+          std::cout << table[i][j].second << " ";
+      }
+      std::cout << '\n';
+    }
+    //print cycle
+    std::cout << "cycle:" << std::endl;
+    int i = 0;
+    for (i = 0; i < cycle.size() - 1; i++)
+      std::cout << '(' << cycle[i].first << ", " << cycle[i].second << ") -> ";
+    std::cout << '(' << cycle[i].first << ", " << cycle[i].second << ")" << std::endl << std::endl;
+  }
+
+  // utility function to draw cycle
+  void drawPlan(std::vector<std::pair<int, int>> basis, matr plan) {
+
+    std::cout << "plan:" << std::endl;
+    std::vector<std::vector<std::pair<double, bool>>> table;
+    table.resize(C.sizeH());
+    for (auto& row : table)
+        row.resize(C.sizeW());
+    std::string empty = " - ";
+    //fill table
+    for (int i = 0; i < basis.size(); i++) {
+        table[basis[i].first][basis[i].second].first = plan[basis[i].first][basis[i].second];
+        table[basis[i].first][basis[i].second].second = true;
+    }
+    //print table
+    for (int i = 0; i < C.sizeH(); i++) {
+      for (int j = 0; j < C.sizeW(); j++) {
+        if (table[i][j].second == false)
+          std::cout << empty << " ";
+        else
+          std::cout << table[i][j].first  << " ";
+      }
+      std::cout << '\n';
+    }
+    std::cout << std::endl;
+  }
+
+
 public:
   // constructor from Common Form
   TransportTask(
@@ -322,6 +390,10 @@ public:
       // 5) find cycle
       std::vector<std::pair<int, int>> cycle;
       int res = FindCycle(basis_y_for_x, basis_x_for_y, std::make_pair(cur_min_y, cur_min_x), cycle);
+
+      //print plan and cycle in it
+      drawPlan(basis, X);
+      drawCycle(cycle, X);
 
       if (res < 3)
         throw std::exception("Cannot find cycle");
