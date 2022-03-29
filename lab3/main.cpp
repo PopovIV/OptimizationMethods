@@ -3,6 +3,8 @@
 
 int main(void) { 
   int counter = 0;
+
+  // plot can be found here https://www.desmos.com/calculator/v3jqvsfynk
   auto f = [&](double x) -> double {
     counter++;
     return pow(x, 6) + 3 * x*x + 6 * x - 1;

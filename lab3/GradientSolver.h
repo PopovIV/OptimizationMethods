@@ -35,8 +35,9 @@ double DichotomyMethod(double a, double b, std::function<double(double)> f, doub
   while (fabs(b - a) >= eps)
   {
     double m = (b + a) / 2.0;
-    double y1 = f(m - eps);
-    double y2 = f(m + eps);
+    double delta = (b-a) / 100.0;
+    double y1 = f(m - delta);
+    double y2 = f(m + delta);
     if (y1 >= y2)
       a = m;
     else
