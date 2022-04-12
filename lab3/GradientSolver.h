@@ -13,16 +13,34 @@
 // eps - our error
 double GoldenRatioMethod(double a, double b, std::function<double(double)> f, double eps)
 {
+  int flag = 2;
+  double y1 = 0;
+  double y2 = 0;
+
   while (fabs(b - a) >= eps)
   {
     double x1 = b - (b-a) / GOLDEN_RATIO;
     double x2 = a + (b-a) / GOLDEN_RATIO;
-    double y1 = f(x1);
-    double y2 = f(x2);
+    
+    if (flag == 2)
+    {
+        y1 = f(x1);
+        y2 = f(x2);
+    }
+    if (flag == 0)
+    {
+        y2 = y1;
+        y1 = f(x1);
+    }
+    if (flag == 1)
+    {
+        y1 = y2;
+        y2 = f(x2);
+    }
     if (y1 >= y2)
-      a = x1;
+      a = x1, flag = 1;
     else
-      b = x2;
+      b = x2, flag = 0;
   }
   return (b+a) / 2.0;
 }
