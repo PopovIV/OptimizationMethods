@@ -11,20 +11,28 @@
 // f - our function
 // df - gradient of our function
 // eps - our error
+// iterations - number of iterations
 // alpha_0 - step on zero iteration
 // lambda - our coefficient of step shrinking
 // delta - our criteria of shinking
-vec GradMethodSplitStep(vec x0, std::function<double(vec)> f, std::function<vec(vec)> df, double eps, double alpha_0 = 1, double lambda = 0.5, double delta = 0.9)
+vec GradMethodSplitStep(vec x0, std::function<double(vec)> f, std::function<vec(vec)> df, double eps, int& iterations, double alpha_0 = 0.5, double lambda = 0.6, double delta = 0.5)
 {
   vec xk = x0;
   vec grad_xk = df(xk);
   double alpha_k = alpha_0;
+  iterations = 0;
+  //std::cout << std::endl << std::endl;
   while (grad_xk.lenSquared() >= eps * eps)
   {
+    //for printing results 
+    xk.print();
+    std::cout << "->";
+    //
     double newF = f(xk - grad_xk * alpha_k);
     double oldF = f(xk);
     bool was_nan = false;
     double alpha_prev = alpha_k;
+    alpha_k = alpha_0;
 
     if (isnan(newF) || newF == INFINITY)
       was_nan = true;
@@ -40,7 +48,9 @@ vec GradMethodSplitStep(vec x0, std::function<double(vec)> f, std::function<vec(
       alpha_k = alpha_prev;
 
     grad_xk = df(xk);
+    iterations++;
   }
+  //std::cout << std::endl << std::endl;
   return xk;
 }
 
@@ -79,7 +89,8 @@ double FindAlpha(vec xk, vec pk, std::function<double(vec)> f, std::function<vec
 // df - gradient of our function
 // eps - our error
 // n - update moments coefficient
-vec BFGSMethod(vec x0, std::function<double(vec)> f, std::function<vec(vec)> df, double eps, int n)
+// iterations - number of iterations
+vec BFGSMethod(vec x0, std::function<double(vec)> f, std::function<vec(vec)> df, double eps, int n, int& iterations)
 {
   vec xk = x0;
   vec wk = df(xk) * -1;
@@ -89,7 +100,8 @@ vec BFGSMethod(vec x0, std::function<double(vec)> f, std::function<vec(vec)> df,
 
   for (int i = 0; i < xk.size(); i++)
     Ak[i][i] = 1;
-  
+  iterations = 0;
+  std::cout << std::endl << std::endl;
   while (wk.lenSquared() >= eps * eps)
   {
     vec pk = Ak * wk;
@@ -100,6 +112,10 @@ vec BFGSMethod(vec x0, std::function<double(vec)> f, std::function<vec(vec)> df,
     vec delta_x_k = pk * alpha_k;
     vec delta_w_k = wk;
 
+    //
+    xk.print();
+    std::cout << "->";
+    //
     xk = xk + pk * alpha_k;
     wk = df(xk) * -1;
     delta_w_k = wk - delta_w_k;
@@ -129,11 +145,12 @@ vec BFGSMethod(vec x0, std::function<double(vec)> f, std::function<vec(vec)> df,
       m3.fromVectors(delta_x_k, delta_x_k);
       m1 = m1 * k;
       m2 = m2 * k;
-      m3 = m3 * k;
 
       Ak = (I - m1) * Ak * (I - m2) + m3;
     }
+    iterations++;
   }
+  std::cout << std::endl << std::endl;
   return xk;
 }
 
