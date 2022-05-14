@@ -17,11 +17,20 @@ int main(void) {
     return res;
   };
 
-  double EPSes[] = { 0.1, 0.01, 0.001, 0.000001 };
+  // 0.01
+  // числодроблений
+  // шаг
+  // коэффициент сжатия. Qk
+  // (1-eps) / r
+
+
+  // Xk, Wk, Qk
+
+  double EPSes[] = {0.01};
   vec x_first({ 1, 1 });
   vec q_true({ 0, 0 });
   std::cout << std::fixed << std::setprecision(15);
-  std::cout << "Gradient SplitStep Method" << std::endl;
+  std::cout << "*********************Gradient SplitStep Method" << std::endl;
   for (int i = 0; i < sizeof(EPSes) / sizeof(EPSes[0]); i++)
   {
     counter = 0;
@@ -36,14 +45,17 @@ int main(void) {
     q.print();
   }
 
+  std::cout << "R = " << fabs(df(vec{ 1, 1 })[1]) << std::endl;
+  std::cout << "(1-eps)/R=" << (1 - 0.01) / fabs(df(vec{ 1, 1 })[1]) << std::endl;
+
   
-  std::cout << "BFGS Method" << std::endl;
+  std::cout << "************BFGS Method" << std::endl;
   vec ansr(0);
   for (int i = 0; i < sizeof(EPSes) / sizeof(EPSes[0]); i++)
   {
     counter = 0;
     iterations = 0;
-    auto q = BFGSMethod(x_first, f, df, EPSes[i], 5, iterations);
+    auto q = BFGSMethod(x_first, f, df, EPSes[i], 10, iterations);
 
     std::cout << "Eps=" << EPSes[i]
       << " number of iter=" << iterations

@@ -21,12 +21,17 @@ vec GradMethodSplitStep(vec x0, std::function<double(vec)> f, std::function<vec(
   vec grad_xk = df(xk);
   double alpha_k = alpha_0;
   iterations = 0;
-  //std::cout << std::endl << std::endl;
+  std::cout << std::endl << std::endl;
   while (grad_xk.lenSquared() >= eps * eps)
   {
     //for printing results 
+    //
+    std::cout << "k:" << iterations << std::endl;
+    std::cout << "xk:";
     xk.print();
-    std::cout << "->";
+    
+
+    //std::cout << "->";
     //
     double newF = f(xk - grad_xk * alpha_k);
     double oldF = f(xk);
@@ -37,11 +42,20 @@ vec GradMethodSplitStep(vec x0, std::function<double(vec)> f, std::function<vec(
     if (isnan(newF) || newF == INFINITY)
       was_nan = true;
 
+    int ik = 0;
     while (isnan(newF) || newF == INFINITY || newF - oldF > -delta * alpha_k * grad_xk.lenSquared()) {
       alpha_k = alpha_k * lambda;
+      ik++;
       newF = f(xk - grad_xk * alpha_k);
     }
-    
+
+    std::cout << "ik: " << ik << std::endl;
+    std::cout << "ak: " << alpha_k << std::endl;
+
+    double qk = (xk - grad_xk * alpha_k).len();
+    qk /= (xk).len();
+    std::cout << "qk: " << qk << std::endl;
+
     xk = xk - grad_xk * alpha_k;
 
     if (was_nan)
@@ -106,16 +120,30 @@ vec BFGSMethod(vec x0, std::function<double(vec)> f, std::function<vec(vec)> df,
   {
     vec pk = Ak * wk;
     
+    std::cout << "k:" << iterations << std::endl;
+    std::cout << "xk:";
+    xk.print();
+
+
     // trying to find optimal alpha_k. Ughhhhhh
     double alpha_k = FindAlpha(xk, pk, f, df, eps);
+
+    std::cout << "ak: " << alpha_k << std::endl;
+
 
     vec delta_x_k = pk * alpha_k;
     vec delta_w_k = wk;
 
     //
-    xk.print();
-    std::cout << "->";
+    //xk.print();
+    //std::cout << "->";
     //
+
+    double qk = (xk + pk * alpha_k).len();
+    qk /= (xk).len();
+
+    std::cout << "qk: " << qk << std::endl;
+
     xk = xk + pk * alpha_k;
     wk = df(xk) * -1;
     delta_w_k = wk - delta_w_k;
@@ -133,7 +161,7 @@ vec BFGSMethod(vec x0, std::function<double(vec)> f, std::function<vec(vec)> df,
       // I will take it from here https://habr.com/ru/post/333356/
 
       matr I(Ak.sizeH(), Ak.sizeW());
-      double k = 1.0 / (delta_x_k * delta_w_k);
+      double rho = 1.0 / (delta_x_k * delta_w_k);
       for (int i = 0; i < xk.size(); i++)
         I[i][i] = 1;
 
@@ -143,8 +171,8 @@ vec BFGSMethod(vec x0, std::function<double(vec)> f, std::function<vec(vec)> df,
       m1.fromVectors(delta_x_k, delta_w_k);
       m2.fromVectors(delta_w_k, delta_x_k);
       m3.fromVectors(delta_x_k, delta_x_k);
-      m1 = m1 * k;
-      m2 = m2 * k;
+      m1 = m1 * rho;
+      m2 = m2 * rho;
 
       Ak = (I - m1) * Ak * (I - m2) + m3;
     }
