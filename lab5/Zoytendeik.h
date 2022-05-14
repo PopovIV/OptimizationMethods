@@ -6,7 +6,7 @@
 #pragma warning(disable: 4996)
 
 
-#define GOLDEN_RATIO 1.6180339887498948482045868343656381177203091798057628621
+#define EPS 1e-5
 
 class Zoytendeik {
   vec x0;
@@ -164,7 +164,7 @@ public:
     std::vector<std::function<vec(vec)>> d_ineq_restr,
     matr A,
     double lambda = 0.5,
-    double delta = 1e-4) : 
+    double delta = 0.5) : 
     x0(x0), 
     target_f(target_f), 
     target_df(target_df), 
@@ -181,10 +181,9 @@ public:
   }
 
   // solve task
-  vec solve()
+  vec solve(bool isFirstX = false)
   {
     int k = 0;
-    double prev_eta = 0;
     while (true) 
     {
       std::cout << "Iteration " << k << std::endl;
@@ -223,22 +222,17 @@ public:
       }
 
       // calc delta_0
-      double delta_0 = -delta;
-      if (A.sizeH() > 0)
-      {
-        vec b = A * x0;
-        
-        for (int i = 0; i < ineq_restr.size(); i++)
-        {
-          double val = ineq_restr[i](x0);
-          delta_0 = delta_0 > val ? delta_0 : val;
-        }
-        delta_0 *= -1;
+      if (!nonAlmostActive.empty()) {
+          double delta_0 = ineq_restr[nonAlmostActive[0]](x0);
+          for (int i = 0; i < nonAlmostActive.size(); i++)
+          {
+              double val = ineq_restr[nonAlmostActive[i]](x0);
+              delta_0 = delta_0 > val ? delta_0 : val;
+          }
+          delta_0 *= -1;
+          if ((eta < 0 && isFirstX) || (abs(eta) < EPS && delta <= delta_0))
+              break;
       }
-      if (abs(eta) < 1e-4)
-        break;
-
-      prev_eta = eta;
       k++;
     }
     return x0;
