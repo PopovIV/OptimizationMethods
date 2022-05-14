@@ -184,6 +184,8 @@ public:
   vec solve(bool isFirstX = false)
   {
     int k = 0;
+    if (isFirstX == false)
+        x0[1] = 0;
     while (true) 
     {
       std::cout << "Iteration " << k << std::endl;
@@ -222,17 +224,16 @@ public:
       }
 
       // calc delta_0
-      if (!nonAlmostActive.empty()) {
-          double delta_0 = ineq_restr[nonAlmostActive[0]](x0);
-          for (int i = 0; i < nonAlmostActive.size(); i++)
-          {
-              double val = ineq_restr[nonAlmostActive[i]](x0);
-              delta_0 = delta_0 > val ? delta_0 : val;
-          }
-          delta_0 *= -1;
-          if ((eta < 0 && isFirstX) || (abs(eta) < EPS && delta <= delta_0))
-              break;
+      double delta_0 = -INFINITY;
+      for (int i = 0; i <ineq_restr.size(); i++)
+      {
+          double val = ineq_restr[i](x0);
+          if(abs(val) > EPS)
+              delta_0 = delta_0 < val ? val : delta_0;
       }
+      delta_0 *= -1;
+      if ((eta < 0 && isFirstX) || (abs(eta) < EPS && (delta_0 == INFINITY || delta < delta_0)))
+         break;
       k++;
     }
     return x0;
