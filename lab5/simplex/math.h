@@ -76,6 +76,13 @@ public:
     A.push_back(q);
   }
 
+  double popend(void)
+  {
+    double lst = A[A.size() - 1];
+    A.pop_back();
+    return lst;
+  }
+
   void concatinate(vec q)
   {
     A.insert(A.end(), q.A.begin(), q.A.end());

@@ -180,39 +180,6 @@ public:
       Xi[i] = 1;
   }
 
-  // target_f - target function
-  // target_df - derivative of target function
-  // ineq_restr array of inequality restrictions
-  // d_ineq_restr array of derivatives of inequality restrictions
-  // A - matrix of equality restrictions (Ax = 0)
-  // lambda - division parameter
-  // delta - for determine "Almost passive"
-  Zoytendeik(
-    std::function<double(vec)> target_f,
-    std::function<vec(vec)> target_df,
-    std::vector<std::function<double(vec)>> ineq_restr,
-    std::vector<std::function<vec(vec)>> d_ineq_restr,
-    matr A,
-    double lambda = 0.5,
-    double delta = 1e-4) :
-    x0(x0),
-    target_f(target_f),
-    target_df(target_df),
-    ineq_restr(ineq_restr),
-    d_ineq_restr(d_ineq_restr),
-    A(A),
-    lambda(lambda),
-    delta(delta)
-  {
-    //these "Speedup" parameters
-    Xi = vec(ineq_restr.size());
-    for (int i = 0; i < Xi.size(); i++)
-      Xi[i] = 1;
-
-
-    // we must find first point. 
-  }
-
   // solve task
   vec solve()
   {
@@ -256,16 +223,19 @@ public:
       }
 
       // calc delta_0
-      vec b = A * x0;
-      
-      double delta_0 = 0;
-      for (int i = 0; i < b.size(); i++)
+      double delta_0 = -delta;
+      if (A.sizeH() > 0)
       {
-        delta_0 = delta_0 > b[i] ? delta_0 : b[i];
+        vec b = A * x0;
+        
+        for (int i = 0; i < ineq_restr.size(); i++)
+        {
+          double val = ineq_restr[i](x0);
+          delta_0 = delta_0 > val ? delta_0 : val;
+        }
         delta_0 *= -1;
       }
-
-      if (-delta <= delta_0 && (abs(eta) < 1e-4 || abs(prev_eta - eta) < 1e-6))
+      if (abs(eta) < 1e-4)
         break;
 
       prev_eta = eta;
