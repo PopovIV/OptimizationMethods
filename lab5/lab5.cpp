@@ -8,8 +8,8 @@ vec FindFirstPoint(std::function<double(vec)> target_f,
 
   // must be a solution of Ax = b
   vec newx0(3);
-  newx0[0] = 0.4;
-  newx0[1] = -0.4;
+  newx0[0] = 4;
+  newx0[1] = 6;
   newx0[2] = 0;
 
   // min(nu)
@@ -27,12 +27,12 @@ vec FindFirstPoint(std::function<double(vec)> target_f,
   // phi_i(x) <= nu <=> phi_i(x) - nu <= 0
   for (int i = 0; i < ineq_restr.size() - 1; i++) {
     new_ineq_restr.push_back(
-      [&](vec x) -> double {
+      [&, i](vec x) -> double {
       return ineq_restr[i](x) - x[x.size() - 1];
     }
     );
     new_d_ineq_restr.push_back(
-      [&](vec x) -> vec {
+      [&, i](vec x) -> vec {
       vec res = d_ineq_restr[i](x);
       res[x.size() - 1] = -1;
       return res;
@@ -107,12 +107,12 @@ int main()
     [&](vec x) -> vec {
       vec res(x.size()); //// !! IMPORTANT
       res[0] = 2 * x[0];
-      res[1] = 4 * x[1];
+      res[1] = 2 * x[1];
       res[2] = 2 * x[2] - 0;// - 0 for inside
       return res; }, 
     [&](vec x) -> vec {
       vec res(x.size()); // !! IMPORTANT
-      res[0] = 2 * x[0];
+      res[0] = 4 * x[0];
       res[1] = 2 * x[1];
       res[2] = 0;
       return res; },

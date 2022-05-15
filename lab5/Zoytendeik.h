@@ -5,8 +5,7 @@
 #include "simplex/TaskLoader.h"
 #pragma warning(disable: 4996)
 
-
-#define EPS 1e-5
+#define EPS 1e-4
 
 class Zoytendeik {
   vec x0;
@@ -210,9 +209,13 @@ public:
       {
         double alpha = getAlpha(eta, s);
         vec x1 = x0 + s * alpha;
-        if (x1 == x0)
+        double prev_f = target_f(x0);
+        double cur_f = target_f(x1);
+        if (x1 == x0 || abs(prev_f - cur_f) <= DBL_EPSILON * 10)
         {
           // our step is too small for computer
+          std::cout << "WARNING!!! we have so small alpha, that PC cannot proccess"
+            "operations with it without \"Arbitrary-precision arithmetic\" due to machine zero problem.\n";
           x0 = x1;
           break;
         }
@@ -224,7 +227,7 @@ public:
       }
 
       // calc delta_0
-      double delta_0 = -INFINITY;
+      double delta_0 = -delta;
       for (int i = 0; i <ineq_restr.size(); i++)
       {
           double val = ineq_restr[i](x0);
@@ -232,8 +235,17 @@ public:
               delta_0 = delta_0 < val ? val : delta_0;
       }
       delta_0 *= -1;
-      if ((eta < 0 && isFirstX) || (abs(eta) < EPS && (delta_0 == INFINITY || delta < delta_0)))
-         break;
+      if (isFirstX)
+      {
+        if (x0[x0.size() - 1] < 0)
+          break;
+      }
+      else
+      {
+        if (abs(eta) < EPS && delta <= delta_0)
+          break;
+      }
+     
       k++;
     }
     return x0;
