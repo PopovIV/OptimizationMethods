@@ -58,9 +58,9 @@ class Zoytendeik {
     // write our func
     vec df = target_df(x0);
     for (int el = 0; el < df.size(); el++)
-      fprintf(F, "%lf ", df[el]);
+      fprintf(F, "%17g ", df[el]);
 
-    fprintf(F, "%lf <= 0", -1.0);
+    fprintf(F, "%17g <= 0", -1.0);
     fprintf(F, "\n");
 
 
@@ -68,9 +68,9 @@ class Zoytendeik {
     for (int line = 0; line < ineq_xk.size(); line++)
     {
       for (int el = 0; el < ineq_xk[line].size(); el++)
-        fprintf(F, "%lf ", ineq_xk[line][el]);
+        fprintf(F, "%17g ", ineq_xk[line][el]);
       
-      fprintf(F, "%lf <= 0", -Xi[line]);
+      fprintf(F, "%17g <= 0", -Xi[line]);
       fprintf(F, "\n");
     }
 
@@ -78,7 +78,7 @@ class Zoytendeik {
     for (int line = 0; line < A.sizeH(); line++)
     {
       for (int el = 0; el < A.sizeW(); el++)
-        fprintf(F, "%lf ", A[line][el]);
+        fprintf(F, "%17g ", A[line][el]);
 
       fprintf(F, "0 == 0");
       fprintf(F, "\n");
@@ -184,8 +184,8 @@ public:
   vec solve(bool isFirstX = false)
   {
     int k = 0;
-    if (isFirstX == false)
-        x0[1] = 0;
+    //if (isFirstX == false)
+    //   x0[1] = 1;
     while (true) 
     {
       std::cout << "Iteration " << k << std::endl;

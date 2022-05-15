@@ -8,8 +8,8 @@ vec FindFirstPoint(std::function<double(vec)> target_f,
 
   // must be a solution of Ax = b
   vec newx0(3);
-  newx0[0] = 1;
-  newx0[1] = -1;
+  newx0[0] = 0.4;
+  newx0[1] = -0.4;
   newx0[2] = 0;
 
   // min(nu)
@@ -68,7 +68,7 @@ vec FindFirstPoint(std::function<double(vec)> target_f,
 
   Zoytendeik tmp(newx0, new_f, new_df, new_ineq_restr, new_d_ineq_restr, newA);
 
-  vec sol = tmp.solve();
+  vec sol = tmp.solve(true);
 
   nu = sol.popend();
   if (nu < 0)
@@ -83,14 +83,14 @@ int main()
   int iterations = 0;
   auto f = [&](vec x) -> double {
     counter++;
-    return x[0] * x[0] + 2 * x[1] * x[1] + x[2] * x[2] + exp(x[0] * x[0] + x[1] * x[1]);
+    return x[0] * x[0] + 2 * x[1] * x[1] + 2 * x[2] * x[2] + 8 * x[2] + exp(x[0] * x[0] + x[1] * x[1]);
   };
 
   auto df = [&](vec x) -> vec {
     vec res(x.size()); // !! IMPORTANT
     res[0] = 2 * x[0] * (exp(x[0] * x[0] + x[1] * x[1]) + 1);
     res[1] = 2 * x[1] * (exp(x[0] * x[0] + x[1] * x[1]) + 2);
-    res[2] = 2 * x[2];
+    res[2] = 4 * x[2] + 8;
     return res;
   };
 
@@ -98,29 +98,29 @@ int main()
 
   // inequality
   std::vector<std::function<double(vec)>> in_eq_restrictions = {
-    [&](vec x) -> double {return x[0] * x[0] + x[1] * x[1] + x[2] * x[2] - 4;},
-    [&](vec x) -> double {return x[0] * x[0] + 2 * x[1] * x[1] - 2; },
-    [&](vec x) -> double {return x[0] * x[0] + x[2] * x[2] - 2;},
+    [&](vec x) -> double {return x[0] * x[0] + x[1] * x[1] + x[2] * x[2] - 1;},
+    [&](vec x) -> double {return 2 * x[0] * x[0] + x[1] * x[1] - 0.5;},
+    [&](vec x) -> double {return x[0] * x[0] - 1;},// - 1 for inside
   };
 
   std::vector<std::function<vec(vec)>> d_in_eq_restrictions = {
     [&](vec x) -> vec {
       vec res(x.size()); //// !! IMPORTANT
       res[0] = 2 * x[0];
-      res[1] = 2 * x[1];
-      res[2] = 2 * x[2];
+      res[1] = 4 * x[1];
+      res[2] = 2 * x[2] - 0;// - 0 for inside
       return res; }, 
     [&](vec x) -> vec {
       vec res(x.size()); // !! IMPORTANT
       res[0] = 2 * x[0];
-      res[1] = 4 * x[1];
+      res[1] = 2 * x[1];
       res[2] = 0;
       return res; },
     [&](vec x) -> vec {
       vec res(x.size()); // !! IMPORTANT
       res[0] = 2 * x[0];
       res[1] = 0;
-      res[2] = 2 * x[2];
+      res[2] = 0;
       return res; },
   };
 
