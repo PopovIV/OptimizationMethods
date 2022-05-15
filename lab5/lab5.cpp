@@ -25,7 +25,7 @@ vec FindFirstPoint(std::function<double(vec)> target_f,
 
 
   // phi_i(x) <= nu <=> phi_i(x) - nu <= 0
-  for (int i = 0; i < ineq_restr.size() - 1; i++) {
+  for (int i = 0; i < ineq_restr.size(); i++) {
     new_ineq_restr.push_back(
       [&, i](vec x) -> double {
       return ineq_restr[i](x) - x[x.size() - 1];
@@ -128,7 +128,6 @@ int main()
   matr A(1, 3); // (0, 0, 0)
   A[0][2] = 1; // (0, 0, 1)
   // that means A * x = 0 <=> x[3] = 0
-
   /*
   vec x0 = vec(3);
   x0[0] = 0.7;
@@ -138,12 +137,14 @@ int main()
   // find first point
   std::cout <<"FIND FISRT POINT" << std::endl;
   vec x0 = FindFirstPoint(f, df, in_eq_restrictions, d_in_eq_restrictions, A);
-  
+  std::cout << "First point f=" << f(x0) << " x =";
+  x0.print();
   std::cout << "FIND SOLUTION" << std::endl;
 
   Zoytendeik z(x0, f, df, in_eq_restrictions, d_in_eq_restrictions, A);
 
   vec sol = z.solve();
 
+  std::cout << "Solution point f=" << f(sol) << " x =";
   sol.print();
 }

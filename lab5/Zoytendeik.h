@@ -6,6 +6,7 @@
 #pragma warning(disable: 4996)
 
 #define EPS 1e-4
+#define GOLDEN_RATIO 1.6180339887498948482045868343656381177203091798057628621
 
 class Zoytendeik {
   vec x0;
@@ -162,8 +163,8 @@ public:
     std::vector<std::function<double(vec)>> ineq_restr,
     std::vector<std::function<vec(vec)>> d_ineq_restr,
     matr A,
-    double lambda = 0.5,
-    double delta = 0.5) : 
+    double lambda = 1/ GOLDEN_RATIO,
+    double delta = 1.1) : 
     x0(x0), 
     target_f(target_f), 
     target_df(target_df), 
@@ -191,6 +192,7 @@ public:
       std::cout << "xk= ";
       x0.print();
       std::cout << "f_xk = " << target_f(x0) << std::endl;
+      std::cout << "delta = " << delta << std::endl;
 
 
       std::vector<int> almostActive = findAlmostActive();
@@ -205,13 +207,18 @@ public:
       for (int i = 0; i < s.size(); i++)
         s[i] = simplex_solution[i];
 
-      if (eta < -delta) 
+
+      std::cout << "eta = " << eta << std::endl;
+      std::cout << "s = ";
+      s.print();
+
+      if (eta < -delta || eta == 0) 
       {
         double alpha = getAlpha(eta, s);
         vec x1 = x0 + s * alpha;
         double prev_f = target_f(x0);
         double cur_f = target_f(x1);
-        if (x1 == x0 || abs(prev_f - cur_f) <= DBL_EPSILON * 10)
+        if (x1 == x0)
         {
           // our step is too small for computer
           std::cout << "WARNING!!! we have so small alpha, that PC cannot proccess"

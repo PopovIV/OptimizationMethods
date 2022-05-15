@@ -251,7 +251,8 @@ public:
         int k = 1;//(-1)^1
         double result = 0;
         for (int i = 0; i < sizeH(); i++) {
-          result +=  k * A[i][0] * getMatr(i, 0).determinant();
+          if (A[i][0] != 0) 
+            result +=  k * A[i][0] * getMatr(i, 0).determinant();
           k *= -1;
         }
         return result;
