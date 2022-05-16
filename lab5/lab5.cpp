@@ -100,7 +100,7 @@ int main()
   std::vector<std::function<double(vec)>> in_eq_restrictions = {
     [&](vec x) -> double {return x[0] * x[0] + x[1] * x[1] + x[2] * x[2] - 1;},
     [&](vec x) -> double {return 2 * x[0] * x[0] + x[1] * x[1] - 0.5;},
-    [&](vec x) -> double {return x[0] * x[0] - 1;},// - 1 for inside
+    [&](vec x) -> double {return (x[0] - 1) * (x[0] - 1) + x[1] * x[1] - 1;},// - 1 for inside
   };
 
   std::vector<std::function<vec(vec)>> d_in_eq_restrictions = {
@@ -118,8 +118,8 @@ int main()
       return res; },
     [&](vec x) -> vec {
       vec res(x.size()); // !! IMPORTANT
-      res[0] = 2 * x[0];
-      res[1] = 0;
+      res[0] = 2 * (x[0] - 1);
+      res[1] = 2 * x[1];
       res[2] = 0;
       return res; },
   };

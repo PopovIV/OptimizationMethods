@@ -4,7 +4,8 @@
 #include "math.h"
 #include <limits>
 #include <algorithm>
-#include "OtherSimplex.h"
+
+#define EPS 1e-10
 
 class LinearProgTask {
 private:
@@ -272,7 +273,7 @@ public:
       // step 1 - check if optimal
       bool is_optimal = true;
       for (int i = 0; i < b_col; i++)
-        if (simplexTable[c_row][i] < 0)
+        if (simplexTable[c_row][i] < -EPS)
         {
           is_optimal = false;
           main_column_index = i;
@@ -285,7 +286,7 @@ public:
       // Blend rule
       for (int i = 0; i < b_col; i++)
       {
-        if ((simplexTable[c_row][i] < 0) && !isIn(i, basis))
+        if ((simplexTable[c_row][i] < -EPS) && !isIn(i, basis))
         {
           main_column_index = i;
           break;
@@ -297,7 +298,7 @@ public:
       std::vector<double> delta;
       delta.resize(c_row);
       for (int i = 0; i < delta.size(); i++)
-        if (simplexTable[i][main_column_index] > 0)
+        if (simplexTable[i][main_column_index] > EPS)
         {
           delta[i] = simplexTable[i][b_col] / simplexTable[i][main_column_index];
         }
@@ -360,7 +361,7 @@ public:
           continue;
         int chosen = -1;
 
-        if (simplexTable[basis.size()][col] != 0)
+        if (abs(simplexTable[basis.size()][col]) > EPS)
           chosen = basis.size();
 
         if (chosen == -1)
@@ -473,41 +474,6 @@ public:
   }
 
   vec tableSimplexMethod(void) {
-    ld _A[100][100] = {0};
-    ld _B[100] = {0};
-    ld _C[100] = {0};
-    
-    // fill A
-    for (int i = 0; i < M; i++)
-      for (int j = 0; j < N; j++)
-        _A[i][j] = A[i][j];
-
-    // fill b
-    for (int i = 0; i < M; i++)
-      _B[i] = b[i];
-
-    // fill c
-    for (int i = 0; i < N; i++)
-      _C[i] = -c[i];
-    
-    vvd newA(M);
-    vd newb(_B, _B + M);
-    vd newc(_C, _C + N);
-    for (int i = 0; i < M; i++) newA[i] = vd(_A[i], _A[i] + N);
-
-    // use someone simplex
-    LPSolver solver(newA, newb, newc);
-    vd x;
-    ld value = solver.Solve(x);
-
-    vec result(N);
-
-    for (int j = 0; j < N; j++)
-      result[j] = x[j];
-
-    return result;
-
-#if 0 // HA-HA our simplex have a bug!!!
     std::vector<std::vector<double>> simplexTable;
     std::vector<int> basis;
     vec result(N);
@@ -562,7 +528,6 @@ public:
     }
 
     return result;
-#endif
   }
 
 

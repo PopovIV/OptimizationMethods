@@ -117,31 +117,10 @@ class Zoytendeik {
 
     // YAHOOO
     sol = task.tableSimplexMethod();
-    if (task.checkSolution(sol))
-    {
-      sol = task.retrieveCorrectAnswer(sol);
-      sol = t.retrieveCorrectAnswer(sol);
+    sol = task.retrieveCorrectAnswer(sol);
+    sol = t.retrieveCorrectAnswer(sol);
 
-      return sol;
-    }
-    else // in case of bad simplex solution
-    {
-      sol = task.retrieveCorrectAnswer(sol);
-      sol = t.retrieveCorrectAnswer(sol);
-
-      if (sol == vec(sol.size()))
-      {
-        sol = df * -1.0;
-        for (int i = 0; i < ineq_xk.size(); i++)
-          sol = sol + ineq_xk[i] * -0.1;
-      
-        double len2 = sol * sol;
-        sol = sol * (1.0 / sqrt(len2));
-
-        sol.append(0);
-      }
-      return sol;
-    }
+    return sol;
   }
 
   double getAlpha(double eta, vec s) {
@@ -233,7 +212,7 @@ public:
       std::cout << "s = ";
       s.print();
 
-      if (eta < -delta || eta == 0) 
+      if (eta < -delta) 
       {
         double alpha = getAlpha(eta, s);
         vec x1 = x0 + s * alpha;
