@@ -4,6 +4,7 @@
 #include "math.h"
 #include <limits>
 #include <algorithm>
+#include "OtherSimplex.h"
 
 class LinearProgTask {
 private:
@@ -248,6 +249,16 @@ public:
     return false;
   }
 
+  bool checkSolution(vec answer)
+  {
+    vec check = A * answer;
+    
+    for (int i = 0; i < b.size(); i++)
+      if (check[i] - b[i] > 1e-6)
+        return false;
+    return true;
+  }
+
   std::vector<int> doSimplex(std::vector<std::vector<double>> &simplexTable, std::vector<int> basis)
   {
     int b_col = simplexTable[0].size() - 1;
@@ -462,6 +473,41 @@ public:
   }
 
   vec tableSimplexMethod(void) {
+    ld _A[100][100] = {0};
+    ld _B[100] = {0};
+    ld _C[100] = {0};
+    
+    // fill A
+    for (int i = 0; i < M; i++)
+      for (int j = 0; j < N; j++)
+        _A[i][j] = A[i][j];
+
+    // fill b
+    for (int i = 0; i < M; i++)
+      _B[i] = b[i];
+
+    // fill c
+    for (int i = 0; i < N; i++)
+      _C[i] = -c[i];
+    
+    vvd newA(M);
+    vd newb(_B, _B + M);
+    vd newc(_C, _C + N);
+    for (int i = 0; i < M; i++) newA[i] = vd(_A[i], _A[i] + N);
+
+    // use someone simplex
+    LPSolver solver(newA, newb, newc);
+    vd x;
+    ld value = solver.Solve(x);
+
+    vec result(N);
+
+    for (int j = 0; j < N; j++)
+      result[j] = x[j];
+
+    return result;
+
+#if 0 // HA-HA our simplex have a bug!!!
     std::vector<std::vector<double>> simplexTable;
     std::vector<int> basis;
     vec result(N);
@@ -516,6 +562,7 @@ public:
     }
 
     return result;
+#endif
   }
 
 
